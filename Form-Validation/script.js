@@ -1,45 +1,38 @@
-document.getElementById("myForm").addEventListener("submit", function(e) {
-  e.preventDefault();
+const form = document.getElementById("myForm");
+const inputs = document.querySelectorAll("input");
+const errorsContainer = document.getElementById("errors");
 
-  let name = document.getElementById("name").value;
-  let email = document.getElementById("email").value;
-  let phone = document.getElementById("phone").value;
-  let password = document.getElementById("password").value;
-  let confirm = document.getElementById("confirm").value;
+const validators = {
+    name: value => value.trim().length >= 3 ? "" : "Name must be at least 3 characters",
+    email: value => /^\S+@\S+\.\S+$/.test(value) ? "" : "Email is invalid",
+    password: value => /(?=.*\d).{6,}/.test(value) ? "" : "Password must be at least 6 characters and include a number",
+    confirmPassword: value => value === document.getElementById("password").value ? "" : "Passwords do not match",
+    age: value => value >= 10 && value <= 100 ? "" : "Age must be between 10 and 100"
+};
 
-  let error = document.getElementById("error");
-  error.innerText = "";
-
-   let inputs = [name, email, phone, password, confirm];
-
-  for (let i = 0; i < inputs.length; i++) {
-    if (inputs[i] === "") {
-      error.innerText = "All fields are required";
-      return;
-    }
-
-    }
-
-  if (name.length < 3) {
-    error.innerText = "Name must be at least 3 characters";
-    return;
-  }
-
-  if (!email.includes("@")) {
-    error.innerText = "Invalid email";
-    return;
-  }
-
-  if (password.length < 6) {
-    error.innerText = "Password must be at least 6 characters";
-    return;
-  }
-
-  if (password !== confirm) {
-    error.innerText = "Passwords do not match";
-    return;
-  }
-
-  alert("Form Submitted Successfully!");
+inputs.forEach(input => {
+    input.addEventListener("input", () => {
+        const error = validators[input.name](input.value);
+        input.classList.remove("valid", "invalid");
+        if(error) {
+            input.classList.add("invalid");
+        } else {
+            input.classList.add("valid");
+        }
+    });
 });
 
+form.addEventListener("submit", e => {
+    e.preventDefault();
+    let allErrors = [];
+    inputs.forEach(input => {
+        const error = validators[input.name](input.value);
+        if(error) allErrors.push(error);
+    });
+    errorsContainer.innerHTML = allErrors.map(err => `<p>${err}</p>`).join("");
+    if(allErrors.length === 0) {
+        errorsContainer.innerHTML = `<p class="success">Form Submitted Successfully!</p>`;
+        form.reset();
+        inputs.forEach(input => input.classList.remove("valid"));
+    }
+});
